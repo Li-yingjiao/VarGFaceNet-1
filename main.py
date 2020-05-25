@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torchsummary import summary
 
 '''
 求Input的二范数，为其输入除以其模长
@@ -215,3 +216,8 @@ if __name__ == '__main__':
     input = torch.randn(1, 3, 112, 112)
     out = model(input)
     print(out.shape)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
+    summary(model, (3, 112, 112)) # 必须开cuda，不需要传入batch_size
