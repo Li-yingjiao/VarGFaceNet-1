@@ -1,6 +1,6 @@
 import torch
 
-BATCH_SIZE = 256
+BATCH_SIZE = 100
 SAVE_FREQ = 1
 TEST_FREQ = 5
 TOTAL_EPOCH = 60
