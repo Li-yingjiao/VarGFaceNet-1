@@ -43,7 +43,7 @@ testloader = torch.utils.data.DataLoader(testdataset, batch_size=32,
 device = DEVICE
 # define model
 net = model.VarGFaceNet()
-arcmargin = model.ArcMarginProduct(128, trainset.class_nums)
+arcmargin = model.ArcMarginProduct(512, trainset.class_nums)
 
 # define optimizers
 # ignored_params = list(map(id, net.linear1.parameters()))
