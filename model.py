@@ -1,7 +1,10 @@
 import torch
 from torch import nn
 from torchsummary import summary
-
+from config import *
+import math
+import torch.nn.functional as F
+from torch.nn import Parameter
 '''
 求Input的二范数，为其输入除以其模长
 角度蒸馏Loss需要用到
@@ -211,13 +214,58 @@ class VarGFaceNet(nn.Module):
         out = self.embedding(x)
         return out
 
+
+class ArcMarginProduct(nn.Module):
+    def __init__(self, in_features=128, out_features=200, s=32.0, m=0.50, easy_margin=False):
+        super(ArcMarginProduct, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.s = s
+        self.m = m
+
+        # 将不可训练的Tensor类型转变为可训练的Parameter，它能让变量在学习的过程中不断优化达到最优值
+        # linear 的weight 和bias就是parameter类型，并且不能用tensor类型替换。与torch.tensor([1,2,3],requires_grad=True)的区别，这个只是将参数变成可训练的，并没有绑定在module的parameter列表中。
+        self.weight = Parameter(torch.Tensor(out_features, in_features))
+        nn.init.xavier_uniform_(self.weight)  # 初始化参数的方式
+        # init.kaiming_uniform_()
+        # self.weight.data.normal_(std=0.001)
+
+        self.easy_margin = easy_margin
+        self.cos_m = math.cos(m)
+        self.sin_m = math.sin(m)
+        # make the function cos(theta+m) monotonic decreasing while theta in [0°,180°]
+        self.th = math.cos(math.pi - m)
+        self.mm = math.sin(math.pi - m) * m
+
+    def forward(self, x, label):
+        # cosine = x * w = cos(theta)
+        cosine = F.linear(F.normalize(x), F.normalize(self.weight))
+        # sin(theta) = 根号(1- cos^2)
+        sine = torch.sqrt(1.0 - torch.pow(cosine, 2))
+        # cos(theta + m) = cos(theta) * cos(m) - sin(theta) * sin(m)
+        phi = cosine * self.cos_m - sine * self.sin_m
+        if self.easy_margin:
+            # 如果cos(theta)>0，那么两个向量是相似的，选择phi，否则选择cosine
+            phi = torch.where(cosine > 0, phi, cosine)
+        else:
+            # if theta + m > 180 ,使用cosface的计算方式
+            phi = torch.where((cosine - self.th) > 0, phi, cosine - self.mm)
+
+        one_hot = torch.zeros(cosine.size())  # one_hot = torch.zeros(cosine.size(), device='cuda')
+        one_hot = one_hot.to(DEVICE)  # 这里必须要搬到CUDA上才能计算
+
+        one_hot.scatter_(1, label.view(-1, 1).long(), 1)  # 这里是为了得到one-hot编码
+        output = (one_hot * phi) + ((1.0 - one_hot) * cosine)
+        output *= self.s
+        return output
+
 if __name__ == '__main__':
     model = VarGFaceNet()
     input = torch.randn(1, 3, 112, 112)
     out = model(input)
     print(out.shape)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = DEVICE
     model = model.to(device)
 
     summary(model, (3, 112, 112)) # 必须开cuda，不需要传入batch_size
