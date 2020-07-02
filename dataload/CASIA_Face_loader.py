@@ -44,13 +44,12 @@ class CASIA_Face(object):
         img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img).float() # (C:3, H:112, W:96)
 
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((112, 112)),
-            transforms.ToTensor(),
-        ])
-        img = transform(img)
-        # print(img.shape)
+        # transform = transforms.Compose([
+        #     transforms.ToPILImage(),
+        #     transforms.Resize((112, 112)),
+        #     transforms.ToTensor(),
+        # ])
+        # img = transform(img)
 
         return img, target
 
