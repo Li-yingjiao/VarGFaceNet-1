@@ -45,9 +45,11 @@ class SqueezeAndExcite(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d(1)
         self.SEblock = nn.Sequential(
             nn.Linear(in_features=in_channels, out_features=mid_channels),
-            nn.ReLU6(inplace=True),
+            # nn.ReLU6(inplace=True),
+            nn.ReLU6(inplace=False),
             nn.Linear(in_features=mid_channels, out_features=out_channels),
-            nn.ReLU6(inplace=True), # 其实这里应该是sigmoid的
+            # nn.ReLU6(inplace=True), # 其实这里应该是sigmoid的
+            nn.ReLU6(inplace=False)
         )
 
     def forward(self, x):
@@ -79,7 +81,8 @@ class NormalBlock(nn.Module):
         x = self.pointconv1(self.vargconv1(x))
         x = self.pointconv2(self.vargconv2(x))
         x = self.se(x)
-        out += x
+        # out += x
+        out = out + x
         return self.prelu(out)
 
 '''
@@ -123,7 +126,8 @@ class DownSampling(nn.Module):
         x3 = x1+x2
         x3 = self.block3(x3)
 
-        out += x3
+        # out += x3
+        out = out + x3
         return self.prelu(out)
 
 
@@ -145,7 +149,8 @@ class HeadSetting(nn.Module):
     def forward(self, x):
         out = self.short(x)
         x = self.block(x)
-        out += x
+        # out += x
+        out = out + x
         return out
 
 
@@ -155,13 +160,15 @@ class Embedding(nn.Module):
         self.embedding = nn.Sequential(
             nn.Conv2d(in_channels, 1024, kernel_size=1, stride=1,padding=0, bias=False),
             nn.BatchNorm2d(1024),
-            nn.ReLU6(inplace=True),
-
+            # nn.ReLU6(inplace=True),
+            nn.ReLU6(inplace=False),
             nn.Conv2d(1024, 1024, 7, 1, padding=0, groups=1024//8, bias=False),
             nn.Conv2d(1024, 512, 1, 1, padding=0, groups=512, bias=False)
         )
 
         self.fc = nn.Linear(in_features=512, out_features=out_channels)
+
+
 
     def forward(self, x):
         x = self.embedding(x)
@@ -176,7 +183,8 @@ class VarGFaceNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=40, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(40),
-            nn.ReLU6(inplace=True)
+            # nn.ReLU6(inplace=True)
+            nn.ReLU6(inplace=False)
         )
         self.head = HeadSetting(40, 3)
         self.stage2 = nn.Sequential( # 1 normal 2 down
@@ -203,6 +211,14 @@ class VarGFaceNet(nn.Module):
         )
 
         self.embedding = Embedding(320, num_classes)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
 
     def forward(self, x):
         x = self.conv1(x)

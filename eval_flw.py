@@ -85,7 +85,7 @@ def evaluation_10_fold(root='./result/pytorch_result.mat'):
 
 
 def getFeatureFromTorch(lfw_dir, feature_save_dir, resume=None, gpu=True):
-    net = model.VarGFaceNet()
+    net = model.VarGFaceNet(128)
     if gpu:
         net = net.to(device)
     if resume:
