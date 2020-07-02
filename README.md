@@ -1,4 +1,4 @@
-# MobileFaceNet
+# VarGFaceNet
 
 ## 运行环境
 
