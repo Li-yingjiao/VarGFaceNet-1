@@ -31,7 +31,14 @@ class LFW(object):
             imglist[i] = imglist[i].transpose(2, 0, 1)
         imgs = [torch.from_numpy(i).float() for i in imglist] # 成了一个 (4, 3, 112, 96)
 
-
+        for img in imgs:
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((112, 112)),
+                transforms.ToTensor(),
+            ])
+            img = transform(img)
+        print(imgs.shape)
 
         return imgs
 
@@ -71,7 +78,10 @@ if __name__ == '__main__':
     # print(LFW_DATA_DIR)
     nl, nr, flods, flags = parseList("../LFW")
     lfw_dataset = LFW(nl, nr)
+
+    # lfw_dataset.__getitem__(0)
+
     lfw_loader = torch.utils.data.DataLoader(lfw_dataset, batch_size=32,shuffle=False, num_workers=8, drop_last=False)
     sample = next(iter(lfw_loader)) # (4, 32, 3, 112, 96)
-    print(sample[0].shape)
+    print(sample[0].shape, sample[1].shape)
 

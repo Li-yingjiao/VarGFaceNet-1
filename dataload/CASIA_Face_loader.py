@@ -34,24 +34,23 @@ class CASIA_Face(object):
     def __getitem__(self, index):
         img_path = self.image_list[index]
         target = self.label_list[index]
-        # img = imageio.imread(img_path)
-        #
-        # if len(img.shape) == 2:
-        #     img = np.stack([img] * 3, 2)
-        # flip = np.random.choice(2)*2-1
-        # img = img[:, ::flip, :]
-        # img = (img - 127.5) / 128.0
-        # img = img.transpose(2, 0, 1)
-        # img = torch.from_numpy(img).float()
+        img = imageio.imread(img_path) #  (112, 96, 3)
 
+        if len(img.shape) == 2:
+            img = np.stack([img] * 3, 2)
+        flip = np.random.choice(2)*2-1
+        img = img[:, ::flip, :]
+        img = (img - 127.5) / 128.0
+        img = img.transpose(2, 0, 1)
+        img = torch.from_numpy(img).float() # (C:3, H:112, W:96)
 
         transform = transforms.Compose([
-            lambda x:Image.open(x).convert('RGB'),
+            transforms.ToPILImage(),
             transforms.Resize((112, 112)),
             transforms.ToTensor(),
         ])
-
-        img = transform(img_path)
+        img = transform(img)
+        # print(img.shape)
 
         return img, target
 
@@ -60,12 +59,10 @@ class CASIA_Face(object):
 
 
 
-if __name__ == '__main__':
-    # data_dir = '/home/brl/USER/fzc/dataset/CASIA'
-    dataset = CASIA_Face("../CASIA")
+if __name__ == '__main__': 
+    dataset = CASIA_Face("../CASIA") # dataset.__getitem__(0)
     trainloader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True, num_workers=8, drop_last=False)
-    # print(len(dataset))
-    print(len(trainloader.dataset))
+    #print(len(trainloader.dataset))
 
     sample = next(iter(trainloader))
     print(sample[0].shape, sample[1].shape)
