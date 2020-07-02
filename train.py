@@ -46,22 +46,24 @@ net = model.VarGFaceNet()
 arcmargin = model.ArcMarginProduct(128, trainset.class_nums)
 
 # define optimizers
-ignored_params = list(map(id, net.linear1.parameters()))
-ignored_params += list(map(id, arcmargin.weight))
-prelu_params_id = []
-prelu_params = []
-for m in net.modules():
-    if isinstance(m, nn.PReLU):
-        ignored_params += list(map(id, m.parameters()))
-        prelu_params += m.parameters()
-base_params = filter(lambda p: id(p) not in ignored_params, net.parameters())
+# ignored_params = list(map(id, net.linear1.parameters()))
+# ignored_params += list(map(id, arcmargin.weight))
+# prelu_params_id = []
+# prelu_params = []
+# for m in net.modules():
+#     if isinstance(m, nn.PReLU):
+#         ignored_params += list(map(id, m.parameters()))
+#         prelu_params += m.parameters()
+# base_params = filter(lambda p: id(p) not in ignored_params, net.parameters())
 
-optimizer_ft = optim.SGD([
-    {'params': base_params, 'weight_decay': 4e-5},
-    {'params': net.linear1.parameters(), 'weight_decay': 4e-4},
-    {'params': arcmargin.weight, 'weight_decay': 4e-4},
-    {'params': prelu_params, 'weight_decay': 0.0}
-], lr=0.1, momentum=0.9, nesterov=True)
+# optimizer_ft = optim.SGD([
+#     {'params': base_params, 'weight_decay': 4e-5},
+#     {'params': net.linear1.parameters(), 'weight_decay': 4e-4},
+#     {'params': arcmargin.weight, 'weight_decay': 4e-4},
+#     {'params': prelu_params, 'weight_decay': 0.0}
+# ], lr=0.1, momentum=0.9, nesterov=True)
+
+optimizer_ft = torch.optim.Adam(net.parameters(),lr=1e-3)
 
 # 学习率衰减
 exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer_ft, milestones=[36, 52, 58], gamma=0.1)
