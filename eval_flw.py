@@ -7,6 +7,7 @@ from dataload.LFW_loader import LFW
 from config import *
 import argparse
 from tqdm import tqdm
+import time
 # os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 device = DEVICE
@@ -105,13 +106,28 @@ def getFeatureFromTorch(lfw_dir, feature_save_dir, resume=None, gpu=True):
     featureRs = None
     count = 0
 
+    is_calc_time = True
+    ans = 0
+
     for data in tqdm(lfw_loader):
         if gpu:
             for i in range(len(data)):
                 data[i] = data[i].to(device)
         count += data[0].size(0) # batch的大小
         print('extracing deep features from the face pair {}...'.format(count))
-        res = [net(d).data.cpu().numpy()for d in data]
+
+        if is_calc_time:
+            start_time = time.time()
+            res = [net(d).data.cpu().numpy() for d in data]
+            end_time = time.time()
+            is_calc_time = False
+            # 算出平均每张图片的毫秒数量
+            count = len(data) * len(data[0])  # 图片总数量
+            ans = int(((end_time - start_time) * 1000 + 0.5) / count)
+        else:
+            res = [net(d).data.cpu().numpy() for d in data]
+
+
         featureL = np.concatenate((res[0], res[1]), 1)
         featureR = np.concatenate((res[2], res[3]), 1)
         if featureLs is None:
@@ -126,6 +142,7 @@ def getFeatureFromTorch(lfw_dir, feature_save_dir, resume=None, gpu=True):
     result = {'fl': featureLs, 'fr': featureRs, 'fold': flods, 'flag': flags}
     scipy.io.savemat(feature_save_dir, result)
 
+    return  ans
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Testing')
@@ -136,7 +153,8 @@ if __name__ == '__main__':
                         help='The path of the extract features save, must be .mat file')
     args = parser.parse_args()
 
-    getFeatureFromTorch(args.lfw_dir, args.feature_save_dir, args.resume, gpu=False)
+    avg_time = getFeatureFromTorch(args.lfw_dir, args.feature_save_dir, args.resume, gpu=False)
+    print("平均每张照片的推理速度:{} ms".format(avg_time))
     ACCs = evaluation_10_fold(args.feature_save_dir)
     for i in range(len(ACCs)):
         print('{}    {:.2f}'.format(i+1, ACCs[i] * 100))

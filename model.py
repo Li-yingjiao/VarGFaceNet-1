@@ -162,7 +162,7 @@ class Embedding(nn.Module):
             nn.BatchNorm2d(1024),
             # nn.ReLU6(inplace=True),
             nn.ReLU6(inplace=False),
-            nn.Conv2d(1024, 1024, 7, 1, padding=0, groups=1024//8, bias=False),
+            nn.Conv2d(1024, 1024, (7, 6), 1, padding=0, groups=1024//8, bias=False),
             nn.Conv2d(1024, 512, 1, 1, padding=0, groups=512, bias=False)
         )
 
@@ -276,12 +276,12 @@ class ArcMarginProduct(nn.Module):
         return output
 
 if __name__ == '__main__':
-    model = VarGFaceNet()
-    input = torch.randn(1, 3, 112, 112)
-    out = model(input)
-    print(out.shape)
+    model = VarGFaceNet(128)
+    # input = torch.randn(1, 3, 112, 112)
+    # out = model(input)
+    # print(out.shape)
 
     device = DEVICE
     model = model.to(device)
 
-    summary(model, (3, 112, 112)) # 必须开cuda，不需要传入batch_size
+    summary(model, (3, 112, 96)) # 必须开cuda，不需要传入batch_size

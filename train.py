@@ -124,8 +124,8 @@ for epoch in range(start_epoch, TOTAL_EPOCH+1):
 
         result = {'fl': featureLs, 'fr': featureRs, 'fold': folds, 'flag': flags}
         # save tmp_result
-        scipy.io.savemat('./result/tmp_result.mat', result)
-        accs = evaluation_10_fold('./result/tmp_result.mat')
+        scipy.io.savemat('tmp_result.mat', result)
+        accs = evaluation_10_fold('tmp_result.mat')
         print('ave: {:.4f}'.format(np.mean(accs) * 100))
 
     # save model

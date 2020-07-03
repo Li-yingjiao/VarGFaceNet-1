@@ -1,5 +1,32 @@
 # VarGFaceNet
 
+文档结构如下：
+
+```bash
+├── CASIA
+│   ├── CASIA.7z
+│   ├── CASIA-WebFace-112X96
+│   └── CASIA-WebFace-112X96.txt
+├── config.py
+├── dataload
+│   ├── CASIA_Face_loader.py
+│   └── LFW_loader.py
+├── eval_flw.py
+├── LFW
+│   ├── lfw-112X96
+│   ├── lfw.7z
+│   └── pairs.txt
+├── model.py (VarGFaceNet模型文件)
+├── __pycache__
+│   └── config.cpython-37.pyc
+├── README.md
+├── run.sh
+├── save_model
+└── train.py
+
+```
+
+
 ## 运行环境
 
 * Python 3.8
@@ -12,7 +39,7 @@
 
 [Align-CASIA-WebFace@BaiduDrive](https://pan.baidu.com/s/1k3Cel2wSHQxHO9NkNi3rkg) and [Align-LFW@BaiduDrive](https://pan.baidu.com/s/1r6BQxzlFza8FM8Z8C_OCBg).
 
-### 2、训练（这一步可以没有，在result中提供了训练好的）
+### 2、训练
 
 改变**CAISIA_DATA_DIR** and **LFW_DATA_DAR** (在`config.py`文件中)
   
